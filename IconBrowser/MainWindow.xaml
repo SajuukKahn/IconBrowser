@@ -1,0 +1,152 @@
+﻿<Window
+    x:Class="IconBrowser.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:virt="clr-namespace:WpfToolkit.Controls;assembly=VirtualizingWrapPanel"
+    Title="Icon Browser"
+    Width="670"
+    Height="900"
+    Background="#292B26"
+    Left="200"
+    Top="150"
+    WindowStartupLocation="Manual">
+    <Window.Resources>
+        <Style TargetType="ScrollBar">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="#ECEFE9" />
+            <Setter Property="BorderBrush" Value="#b8b2a0" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="9" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="5">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <!--  Hover  -->
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#252525" />
+                                <Setter Property="BorderBrush" Value="#ffffff" />
+                            </Trigger>
+                            <!--  Pressed  -->
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="#BBB" />
+                                <Setter Property="BorderBrush" Value="#333" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Popup
+            x:Name="FadePopup"
+            AllowsTransparency="True"
+            PopupAnimation="Fade"
+            StaysOpen="False">
+            <Border
+                Padding="10"
+                Background="LightBlue"
+                CornerRadius="5" />
+        </Popup>
+        <DockPanel Background="Transparent">
+            <DockPanel DockPanel.Dock="Top">
+
+                <Grid
+                    MinWidth="120"
+                    Margin="5"
+                    DockPanel.Dock="Right">
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+                    <Button
+                        Margin="0,0,0,2"
+                        Click="Button_Click"
+                        Content="SVG Editor" />
+                    <Button
+                        Grid.Row="1"
+                        Margin="0,2,0,0"
+                        Click="Open_Material_Icon_Website"
+                        Content="Material Icons" />
+                </Grid>
+                <Grid MinHeight="65" DockPanel.Dock="Left">
+
+                    <TextBox
+                        x:Name="SearchBox"
+                        Margin="15,8,0,8"
+                        VerticalContentAlignment="Center"
+                        AcceptsReturn="False"
+                        Background="Transparent"
+                        FontSize="16"
+                        Foreground="#ECEFE9"
+                        GotFocus="SearchBox_GotFocus"
+                        LostFocus="SearchBox_LostFocus"
+                        TextAlignment="Left"
+                        TextChanged="SearchBox_TextChanged" />
+
+                    <TextBlock
+                        x:Name="PlaceHolderText"
+                        Margin="25,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Center"
+                        Background="Transparent"
+                        FontSize="16"
+                        Foreground="#959D8C"
+                        IsHitTestVisible="False"
+                        Text="Search ..." />
+                </Grid>
+            </DockPanel>
+
+
+            <virt:VirtualizingItemsControl x:Name="IconList" Background="Transparent">
+                <virt:VirtualizingItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <virt:VirtualizingWrapPanel IsItemsHost="True" />
+                    </ItemsPanelTemplate>
+                </virt:VirtualizingItemsControl.ItemsPanel>
+                <virt:VirtualizingItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Button
+                            Margin="2"
+                            BorderThickness="1"
+                            Click="Copy_Icon_Name">
+                            <StackPanel MinWidth="95">
+                                <Path
+                                    Width="35"
+                                    Height="35"
+                                    Margin="0,2"
+                                    HorizontalAlignment="Center"
+                                    Data="{Binding PathData}"
+                                    Fill="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}, Path=Foreground}"
+                                    Stretch="Uniform" />
+
+                                <TextBlock
+                                    HorizontalAlignment="Center"
+                                    FontFamily="Cascadia Mono"
+                                    FontSize="8"
+                                    Foreground="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}, Path=BorderBrush}"
+                                    Text="{Binding Key}"
+                                    TextTrimming="CharacterEllipsis"
+                                    TextWrapping="NoWrap" />
+                            </StackPanel>
+                        </Button>
+                    </DataTemplate>
+                </virt:VirtualizingItemsControl.ItemTemplate>
+            </virt:VirtualizingItemsControl>
+        </DockPanel>
+    </Grid>
+</Window>
