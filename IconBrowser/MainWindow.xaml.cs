@@ -25,7 +25,7 @@
         private void LoadIcons()
         {
 #if DEBUG
-            var root = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + @"\source\repos\PathMasterX\";
+            var root = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + @"\source\repos\precisionValve\PathMasterX\";
 #else
             var root = Directory.GetCurrentDirectory();
 #endif
