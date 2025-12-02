@@ -56,7 +56,8 @@
         {
             string filter = SearchBox.Text.Trim();
 
-            IconList.ItemsSource = string.IsNullOrEmpty(filter) ? _allIcons : [.. _allIcons.Where(i => i.Key.Contains(filter, StringComparison.InvariantCultureIgnoreCase))]; 
+            var filtered = filter.FindClosestMatchesByDistance(_allIcons.Select(i => i.SearchKey), 12 - Math.Min(filter.Length, 4));
+            IconList.ItemsSource = string.IsNullOrEmpty(filter) ? _allIcons : [.. _allIcons.IntersectBy(filtered, i => i.SearchKey, StringComparer.InvariantCultureIgnoreCase)];
         }
 
         private void SearchBox_GotFocus(object sender, RoutedEventArgs e)
@@ -111,6 +112,151 @@
     public class IconItem
     {
         public string Key { get; set; } = "";
+        public string SearchKey => !Key.Contains("MaterialIcon", StringComparison.OrdinalIgnoreCase) ? Key : Key[.. Key.LastIndexOf("MaterialIcon", StringComparison.OrdinalIgnoreCase)];
         public string PathData { get; set; } = "";
+    }
+    public static class StringExtensions
+    {
+        /// <summary>
+        /// Uses the Levenshtein Distance Algorithm to fuzzy match a source string against a collection of potential matches.
+        /// </summary>
+        /// <param name="source">The source string.</param>
+        /// <param name="options">The list of potential matches.</param>
+        /// <returns>The single closest match.</returns>
+        public static string FindClosestMatch(this string source, IEnumerable<string> options)
+        {
+            if (string.IsNullOrEmpty(source) || options == null || !options.Any())
+            {
+                return string.Empty;
+            }
+
+            string closestMatch = string.Empty;
+            int smallestDistance = int.MaxValue;
+            foreach (string option in options)
+            {
+                int distance = ComputeLevenshteinDistance(source, option);
+                if (distance < smallestDistance)
+                {
+                    smallestDistance = distance;
+                    closestMatch = option;
+
+                    if (smallestDistance == 0)
+                    {
+                        return closestMatch;
+                    }
+                }
+            }
+
+            Debug.WriteLine($"{source} : Closest Match: {closestMatch} at distance: {smallestDistance}");
+            return closestMatch;
+        }
+
+        /// <summary>
+        /// Finds multiple closest matches.
+        /// </summary>
+        /// <param name="source">The source string to match.</param>
+        /// <param name="options">The list of strings to match against.</param>
+        /// <param name="maximumNumberOfMatches">The maximum number of close matches to find.</param>
+        /// <returns>A list of the closest n# of matches.</returns>
+        public static List<string> FindClosestMatches(this string source, IEnumerable<string> options, int maximumNumberOfMatches)
+        {
+            var dictionary = new Dictionary<string, int>();
+            var list = new List<string>();
+            if (string.IsNullOrEmpty(source) || options == null || !options.Any() || maximumNumberOfMatches == 0)
+            {
+                return list;
+            }
+
+            foreach (string option in options)
+            {
+                dictionary.Add(option, ComputeLevenshteinDistance(source, option));
+            }
+
+            list.AddRange(from KeyValuePair<string, int> item in dictionary.OrderBy(x => x.Value).Take(maximumNumberOfMatches)
+                          select item.Key);
+
+            return list;
+        }
+
+        /// <summary>
+        /// Finds multiple closest matches.
+        /// </summary>
+        /// <param name="source">The source string to match.</param>
+        /// <param name="options">The list of strings to match against.</param>
+        /// <param name="maximumDistance">The maximum number of close matches to find.</param>
+        /// <returns>A list of the closest n# of matches.</returns>
+        public static List<string> FindClosestMatchesByDistance(this string source, IEnumerable<string> options, int maximumDistance)
+        {
+            var dictionary = new Dictionary<string, int>();
+            var list = new List<string>();
+            if (string.IsNullOrEmpty(source) || options == null || !options.Any())
+            {
+                return list;
+            }
+
+            foreach (string option in options)
+            {
+                if (ComputeLevenshteinDistance(source, option) is int distance && distance < maximumDistance)
+                {
+                    dictionary.Add(option, distance);
+                }
+            }
+
+            list.AddRange(from KeyValuePair<string, int> item in dictionary.OrderBy(x => x.Value)
+                          select item.Key);
+
+            return list;
+        }
+
+        // taken from https://github.com/DanHarltey/Fastenshtein/blob/master/src/Fastenshtein/StaticLevenshtein.cs MIT license
+        private static int ComputeLevenshteinDistance(string source, string option)
+        {
+            if (option.Length == 0)
+            {
+                return source.Length;
+            }
+
+            int[] costs = new int[option.Length];
+
+            for (int i = 0; i < costs.Length;)
+            {
+                costs[i] = ++i;
+            }
+
+            for (int i = 0; i < source.Length; i++)
+            {
+                int cost = i;
+                int previousCost = i;
+
+                char value1Char = source[i];
+
+                for (int j = 0; j < option.Length; j++)
+                {
+                    int currentCost = cost;
+
+                    cost = costs[j];
+
+                    if (value1Char != option[j])
+                    {
+                        if (previousCost < currentCost)
+                        {
+                            currentCost = previousCost;
+                        }
+
+                        if (cost < currentCost)
+                        {
+                            currentCost = cost;
+                        }
+
+                        ++currentCost;
+                    }
+
+                    costs[j] = currentCost;
+                    previousCost = currentCost;
+                }
+            }
+
+            return costs[costs.Length - 1];
+        }
     }
 }
