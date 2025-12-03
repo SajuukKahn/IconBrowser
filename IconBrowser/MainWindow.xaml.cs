@@ -57,7 +57,7 @@
             string filter = SearchBox.Text.Trim();
             if (!string.IsNullOrEmpty(filter))
             {
-                var filteredList = filter.FindMatchesLimitDistance(_allIcons.Select(i => i.Key), 10);
+                var filteredList = filter.FindMatchesLimitDistance(_allIcons.Select(i => i.Key), 6);
                 var matchedIcons = _allIcons.Where(i => i.Key.Contains(filter, StringComparison.InvariantCultureIgnoreCase));
                 var closeMatchIcons = _allIcons.Where(i => filteredList.Contains(i.Key));
                 IconList.ItemsSource = matchedIcons.Union(closeMatchIcons).Distinct();
@@ -188,9 +188,9 @@
         /// </summary>
         /// <param name="source">The source string to match.</param>
         /// <param name="options">The list of strings to match against.</param>
-        /// <param name="maximumDisatance">The maximum distance from the input string to allow.</param>
+        /// <param name="maxDistance">The maximum distance from the input string to allow.</param>
         /// <returns>A list of the closest n# of matches.</returns>
-        public static List<string> FindMatchesLimitDistance(this string source, IEnumerable<string> options, int maximumDisatance)
+        public static List<string> FindMatchesLimitDistance(this string source, IEnumerable<string> options, int maxDistance)
         {
             var dictionary = new Dictionary<string, int>();
             var list = new List<string>();
@@ -206,13 +206,13 @@
                 string iconTrimmed = option[.. (option.Length - 4)];
                 string materialTrimmed = iconTrimmed.EndsWith("ial", StringComparison.OrdinalIgnoreCase) ? iconTrimmed[.. (iconTrimmed.Length - 8)] : iconTrimmed;
                 string allTrimmed = materialTrimmed.EndsWith("Custom", StringComparison.OrdinalIgnoreCase) ? materialTrimmed[..(materialTrimmed.Length - 6)] : materialTrimmed;
-                if (ComputeLevenshteinDistance(source, allTrimmed) is int distance && distance <= maximumDisatance)
+                if (ComputeLevenshteinDistance(source, allTrimmed) is int distance && distance <= maxDistance)
                 {
                     dictionary.Add(option, distance); 
                 }
             }
 
-            list.AddRange(from KeyValuePair<string, int> item in dictionary.OrderBy(x => x.Value).Take(maximumDisatance)
+            list.AddRange(from KeyValuePair<string, int> item in dictionary
                           select item.Key);
 
             return list;
