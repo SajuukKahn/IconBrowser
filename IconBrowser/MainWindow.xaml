@@ -18,8 +18,8 @@
         </Style>
         <Style TargetType="Button">
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Foreground" Value="#ECEFE9" />
-            <Setter Property="BorderBrush" Value="#b8b2a0" />
+            <Setter Property="Foreground" Value="#EEE" />
+            <Setter Property="BorderBrush" Value="#AFAFAF" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Padding" Value="9" />
             <Setter Property="Cursor" Value="Hand" />
@@ -48,6 +48,14 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsCloseMatch}" Value="True">
+                    <Setter Property="Foreground" Value="#BAD" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsCloseMatch}" Value="False">
+                    <Setter Property="Foreground" Value="#EEE" />
+                </DataTrigger>
+            </Style.Triggers>
         </Style>
     </Window.Resources>
 

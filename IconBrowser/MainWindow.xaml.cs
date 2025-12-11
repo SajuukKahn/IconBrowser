@@ -55,12 +55,16 @@
         private void SearchBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
         {
             string filter = SearchBox.Text.Trim();
+            _allIcons.ForEach(i => i.IsCloseMatch = false);
             if (!string.IsNullOrEmpty(filter))
             {
-                var filteredList = filter.FindMatchesLimitDistance(_allIcons.Select(i => i.Key), 6);
                 var matchedIcons = _allIcons.Where(i => i.Key.Contains(filter, StringComparison.InvariantCultureIgnoreCase));
+                var filteredList = filter.FindMatchesLimitDistance(_allIcons.Except(matchedIcons).Select(i => i.Key), 6);
                 var closeMatchIcons = _allIcons.Where(i => filteredList.Contains(i.Key));
-                IconList.ItemsSource = matchedIcons.Union(closeMatchIcons).Distinct();
+                var filteredCloseMatches = closeMatchIcons.Except(matchedIcons);
+                filteredCloseMatches.ToList().ForEach(i => i.IsCloseMatch = true);
+                var combinedList = matchedIcons.Concat(filteredCloseMatches);
+                IconList.ItemsSource = combinedList;
             }
             else
             {
@@ -199,8 +203,6 @@
                 return list;
             }
 
-            bool query = options.Any(x => !x.EndsWith("Icon"));
-
             foreach (string option in options)
             {
                 string iconTrimmed = option[.. (option.Length - 4)];
@@ -208,11 +210,13 @@
                 string allTrimmed = materialTrimmed.EndsWith("Custom", StringComparison.OrdinalIgnoreCase) ? materialTrimmed[..(materialTrimmed.Length - 6)] : materialTrimmed;
                 if (ComputeLevenshteinDistance(source, allTrimmed) is int distance && distance <= maxDistance)
                 {
-                    dictionary.Add(option, distance); 
+                    dictionary.Add(option, distance);
                 }
             }
 
-            list.AddRange(from KeyValuePair<string, int> item in dictionary
+            var sorted = dictionary.OrderBy(x => x.Value).Take(50);
+
+            list.AddRange(from KeyValuePair<string, int> item in sorted
                           select item.Key);
 
             return list;
@@ -274,5 +278,7 @@
     {
         public string Key { get; set; } = "";
         public string PathData { get; set; } = "";
+
+        public bool IsCloseMatch { get; set; }
     }
 }
